@@ -7,18 +7,26 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
     <spring:beans>
         <spring:import resource="classpath:munit-order-system.xml"/>
     </spring:beans>
-    <munit:test name="processOrders_payloadReturnsJavamapWithTwoElements_True" description="Calling process orders flow returns payload of type java map containing two key/value pairs">
+    <munit:before-test name="processOrders-test-suiteBefore_Test" description="Before tests actions">
         <munit:set payload="#[[{'orderID':444, 'location':'international','price':14.01}, {'orderID':444, 'location':'international','price':14.01}, {'orderID':555, 'location':'domestic','price':14.01}]]" doc:name="Set Message: Set payload to International and Demoestic flights"/>
+    </munit:before-test>
+    <munit:test name="processOrders_payloadReturnsJavamapWithTwoElements_True" description="Calling process orders flow returns payload of type java map containing two key/value pairs">
         <flow-ref name="processOrders" doc:name="Call processOrders"/>
         <munit:assert-true message="Oops..! Expected return should be java.util.Map but returned #[payload.getClass().getName()] instead" condition="#[payload is java.util.Map]" doc:name="Assert True: Validate flow return type"/>
         <munit:assert-on-equals message="Failed: Expected 2 elemenets but found #[payload.size()]" expectedValue="#[2]" actualValue="#[payload.size()]" doc:name="Assert Equals: Check size"/>
     </munit:test>
-    <munit:test name="processOrders_internalnationalKeyContainsInternationalOrders_True" description="processOrders_internalnationalKeyContainsInternationalOrders_True">
-        <munit:set payload="#[[{'orderID':444, 'location':'international','price':14.01}, {'orderID':444, 'location':'international','price':14.01}, {'orderID':555, 'location':'domestic','price':14.01}]]" doc:name="Set Message: Set payload to International and Demoestic flights"/>
+    <munit:test name="processOrders_internationalKeyContainsInternationalOrders_True" description="processOrders_internationalKeyContainsInternationalOrders_True">
         <flow-ref name="processOrders" doc:name="Call processOrders"/>
         <munit:assert-true message="Failed: Internation Key shoul contain atleast 1 element but found #[payload.'international'.size()]" condition="#[payload.'international'.size() &gt; 0]" doc:name="Assert True: Validate the international key is not empty"/>
-        <foreach  doc:name="For Each: Row in international key" collection="#[payload.'international']">
-            <munit:assert-on-equals doc:name="Assert Equal: location = international" actualValue="#[payload.'location']" expectedValue="#['international']" message="FAILED: Expected location to be international, but found #[payload.'location'] at row: #[flowVars.counter] instead!!"/>
+        <foreach collection="#[payload.'international']" doc:name="For Each: Row in international key">
+            <munit:assert-on-equals message="FAILED: Expected location to be international, but found #[payload.'location'] at row: #[flowVars.counter] instead!!" expectedValue="#['international']" actualValue="#[payload.'location']" doc:name="Assert Equal: location = international"/>
+        </foreach>
+    </munit:test>
+    <munit:test name="processOrders_domesticKeyContainsInternationalOrders_True" description="processOrders_domesticKeyContainsdomesticOrders_True">
+        <flow-ref name="processOrders" doc:name="Call processOrders"/>
+        <munit:assert-true message="Failed: Internation Key shoul contain atleast 1 element but found #[payload.'domestic'.size()]" condition="#[payload.'domestic'.size() &gt; 0]" doc:name="Assert True: Validate the domestic key is not empty"/>
+        <foreach collection="#[payload.'domestic']" doc:name="For Each: Row in domestic key">
+            <munit:assert-on-equals message="FAILED: Expected location to be domestic, but found #[payload.'location'] at row: #[flowVars.counter] instead!!" expectedValue="#['domestic']" actualValue="#[payload.'location']" doc:name="Assert Equal: location = domestic"/>
         </foreach>
     </munit:test>
 </mule>
